@@ -17,7 +17,7 @@ func (cfg *apiConfig) metricsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (cfg *apiConfig) metricsResetHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) metricsResetHandler(w http.ResponseWriter, _ *http.Request) {
 	cfg.fileserverHits.Store(0)
 	w.WriteHeader(http.StatusOK)
 }
