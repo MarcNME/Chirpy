@@ -3,8 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
-
-	"github.com/MarcNME/Chirpy/handlers"
+	"sync/atomic"
 )
 
 func Log(handler http.Handler) http.Handler {
@@ -16,10 +15,13 @@ func Log(handler http.Handler) http.Handler {
 
 func main() {
 	const port = "8080"
+	cfg := &apiConfig{}
 
 	mux := http.NewServeMux()
-	mux.Handle("/app/", http.StripPrefix("/app", http.FileServer(http.Dir("./static/"))))
-	mux.HandleFunc("/healthz", handlers.ReadinessHandler)
+	mux.Handle("/app/", http.StripPrefix("/app", cfg.middlewareMetricsInc(FileHandler())))
+	mux.HandleFunc("/healthz", readinessHandler)
+	mux.HandleFunc("/metrics", cfg.metricsHandler)
+	mux.HandleFunc("/reset", cfg.metricsResetHandler)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
@@ -29,4 +31,15 @@ func main() {
 
 	log.Printf("Serving on: %s\n", srv.Addr)
 	log.Fatal(srv.ListenAndServe())
+}
+
+func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cfg.fileserverHits.Add(1)
+		next.ServeHTTP(w, r)
+	})
+}
+
+type apiConfig struct {
+	fileserverHits atomic.Int32
 }
