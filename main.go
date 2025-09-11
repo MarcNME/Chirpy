@@ -1,10 +1,17 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sync/atomic"
+
+	"github.com/MarcNME/Chirpy/internal/database"
+	"github.com/joho/godotenv"
 )
+import _ "github.com/lib/pq"
 
 func Log(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -15,6 +22,15 @@ func Log(handler http.Handler) http.Handler {
 
 func main() {
 	const port = "8080"
+	godotenv.Load()
+	dbURL := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatalf("Error opening database: %q", err)
+	}
+	dbQueries := database.New(db)
+
+	fmt.Println(dbQueries)
 	cfg := &apiConfig{}
 
 	mux := http.NewServeMux()
@@ -32,13 +48,6 @@ func main() {
 
 	log.Printf("Serving on: %s\n", srv.Addr)
 	log.Fatal(srv.ListenAndServe())
-}
-
-func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cfg.fileserverHits.Add(1)
-		next.ServeHTTP(w, r)
-	})
 }
 
 type apiConfig struct {

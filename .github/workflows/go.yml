@@ -21,6 +21,9 @@ jobs:
       with:
         go-version: '1.24.4'
 
+    - name: Generate code with sqlc
+      run: go install github.com/kyleconroy/sqlc/cmd/sqlc@latest && sqlc generate
+
     - name: Build
       run: go build -v ./...
 
