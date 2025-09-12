@@ -5,29 +5,30 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/MarcNME/Chirpy/constants"
 	"github.com/MarcNME/Chirpy/helpers"
 	"github.com/google/uuid"
 )
 
 var profanityWords = [...]string{"kerfuffle", "sharbert", "fornax"}
 
-func (cfg *apiConfig) ChirpHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) NewChirpHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	validationRequest := validationRequest{}
 	err := decoder.Decode(&validationRequest)
 	if err != nil {
-		writeErrorMessage(w, "Could not decode body: "+err.Error(), http.StatusBadRequest)
+		helpers.WriteErrorMessage(w, "Could not decode body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 	if len(validationRequest.Body) > 140 {
-		writeErrorMessage(w, "Chirp is to long", http.StatusBadRequest)
+		helpers.WriteErrorMessage(w, "Chirp is to long", http.StatusBadRequest)
 		return
 	}
 
 	msg := helpers.ReplaceAllIgnoreCase(validationRequest.Body, profanityWords[:])
 	chirp, err := cfg.db.CreateChirp(r.Context(), msg, validationRequest.UserID)
 	if err != nil {
-		writeErrorMessage(w, "Error creating chirp: "+err.Error(), http.StatusInternalServerError)
+		helpers.WriteErrorMessage(w, "Error creating chirp: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -37,8 +38,8 @@ func (cfg *apiConfig) ChirpHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set(constants.ContentType, constants.ApplicationJson)
 	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(res)
 	if err != nil {
 		log.Printf("Error writing response: %v", err)
@@ -47,12 +48,25 @@ func (cfg *apiConfig) ChirpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func writeErrorMessage(w http.ResponseWriter, msg string, errorCode int) {
-	w.WriteHeader(errorCode)
-	w.Header().Set("Content-Type", "application/json")
-	_, err := w.Write([]byte(`{"error": "` + msg + `"}`))
+func (cfg *apiConfig) GetAllChirps(w http.ResponseWriter, r *http.Request) {
+	chirps, err := cfg.db.GetAllChirps(r.Context())
 	if err != nil {
-		log.Printf("Could not write error message: %v", err)
+		helpers.WriteErrorMessage(w, "Error getting chirps: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	body, err := json.Marshal(chirps)
+	if err != nil {
+		helpers.WriteErrorMessage(w, "Error marshalling chirps: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set(constants.ContentType, constants.ApplicationJson)
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(body)
+	if err != nil {
+		log.Printf("Error writing response: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }

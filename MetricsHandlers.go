@@ -3,13 +3,15 @@ package main
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/MarcNME/Chirpy/constants"
 )
 
 const template = "<html>\n  <body>\n    <h1>Welcome, Chirpy Admin</h1>\n    <p>Chirpy has been visited %d times!</p>\n  </body>\n</html>"
 
-func (cfg *apiConfig) metricsHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) metricsHandler(w http.ResponseWriter, _ *http.Request) {
 	message := fmt.Sprintf(template, cfg.fileserverHits.Load())
-	r.Header.Set("Content-Type", "text/html")
+	w.Header().Set(constants.ContentType, constants.TextHtml)
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte(message))
 	if err != nil {
