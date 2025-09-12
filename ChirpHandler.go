@@ -71,6 +71,30 @@ func (cfg *apiConfig) GetAllChirps(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (cfg *apiConfig) GetChirpById(w http.ResponseWriter, r *http.Request) {
+	chirpId := r.PathValue("id")
+	chirp, err := cfg.db.GetChirpByID(r.Context(), uuid.MustParse(chirpId))
+	if err != nil {
+		helpers.WriteErrorMessage(w, "Error getting chirp: "+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	body, err := json.Marshal(chirp)
+	if err != nil {
+		helpers.WriteErrorMessage(w, "Error marshalling chirp: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set(constants.ContentType, constants.ApplicationJson)
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(body)
+	if err != nil {
+		log.Printf("Error writing response: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
 type validationRequest struct {
 	Body   string        `json:"body"`
 	UserID uuid.NullUUID `json:"user_id"`

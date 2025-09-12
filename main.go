@@ -55,6 +55,7 @@ func main() {
 	// Chirp endpoints
 	mux.HandleFunc("POST /api/chirps", cfg.NewChirpHandler)
 	mux.HandleFunc("GET /api/chirps", cfg.GetAllChirps)
+	mux.HandleFunc("GET /api/chirps/{id}", cfg.GetChirpById)
 
 	srv := &http.Server{
 		Addr:    ":" + port,

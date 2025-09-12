@@ -9,6 +9,8 @@ Content-Type: application/json
 }
 
 ### Get all chirps
-
 GET http://localhost:8080/api/chirps
 Accept: application/json
+
+### Get chirp by id
+GET http://localhost:8080/api/chirps/31067be5-f203-4603-8c85-9a79ba3fb0ae
