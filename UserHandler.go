@@ -3,8 +3,6 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-
-	"github.com/MarcNME/Chirpy/models"
 )
 
 func (cfg *apiConfig) userHandler(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +29,7 @@ func (cfg *apiConfig) userHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	resp, err := json.Marshal(models.ToUserDTO(user))
+	resp, err := json.Marshal(user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, err := w.Write([]byte("Error marshalling user\n" + err.Error()))

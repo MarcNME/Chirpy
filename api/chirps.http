@@ -1,0 +1,10 @@
+### Create a new user
+POST http://localhost:8080/api/chirps
+Accept: application/json
+Content-Type: application/json
+
+{
+  "body": "Hello, world!",
+  "user_id": "0b0ca37b-01fe-4e67-9f5d-002a5eaa666f"
+}
+###
