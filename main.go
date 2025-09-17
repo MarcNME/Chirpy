@@ -7,7 +7,7 @@ import (
 	"os"
 	"sync/atomic"
 
-	"github.com/MarcNME/Chirpy/internal/database"
+	"github.com/MarcNME/Chirpy/internal/gen/database"
 	"github.com/joho/godotenv"
 )
 import _ "github.com/lib/pq"

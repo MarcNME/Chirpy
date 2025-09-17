@@ -6,6 +6,8 @@ import (
 
 	"github.com/MarcNME/Chirpy/constants"
 	"github.com/MarcNME/Chirpy/helpers"
+	"github.com/MarcNME/Chirpy/internal/auth"
+	"github.com/MarcNME/Chirpy/internal/mappers"
 )
 
 func (cfg *apiConfig) userHandler(w http.ResponseWriter, r *http.Request) {
@@ -16,25 +18,37 @@ func (cfg *apiConfig) userHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := cfg.db.CreateUser(r.Context(), userReq.Email)
+	if userReq.Email == "" || userReq.Password == "" {
+		helpers.WriteErrorMessage(w, "Email and password are required", http.StatusBadRequest)
+		return
+	}
+
+	hashedPassword, err := auth.HashPassword(userReq.Password)
+	if err != nil {
+		helpers.WriteErrorMessage(w, "Error hashing password\n"+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	user, err := cfg.db.CreateUser(r.Context(), userReq.Email, hashedPassword)
 	if err != nil {
 		helpers.WriteErrorMessage(w, "Error creating user\n"+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	resp, err := json.Marshal(user)
+	userDTOJson, err := json.Marshal(mappers.UserToDTO(user))
 	if err != nil {
 		helpers.WriteErrorMessage(w, "Error marshalling user\n"+err.Error(), http.StatusBadRequest)
 		return
 	}
 	w.Header().Set(constants.ContentType, constants.ApplicationJson)
-	_, err = w.Write(resp)
+	_, err = w.Write(userDTOJson)
 	if err != nil {
 		return
 	}
 }
 
 type createUserRequest struct {
-	Email string `json:"email"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
 }

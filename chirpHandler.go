@@ -7,6 +7,7 @@ import (
 
 	"github.com/MarcNME/Chirpy/constants"
 	"github.com/MarcNME/Chirpy/helpers"
+	"github.com/MarcNME/Chirpy/internal/mappers"
 	"github.com/google/uuid"
 )
 
@@ -32,7 +33,7 @@ func (cfg *apiConfig) NewChirpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := json.Marshal(chirp)
+	chirpDtoJson, err := json.Marshal(mappers.ChirpToDTO(chirp))
 	if err != nil {
 		log.Printf("Error marshalling chirp: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -40,7 +41,7 @@ func (cfg *apiConfig) NewChirpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set(constants.ContentType, constants.ApplicationJson)
 	w.WriteHeader(http.StatusCreated)
-	_, err = w.Write(res)
+	_, err = w.Write(chirpDtoJson)
 	if err != nil {
 		log.Printf("Error writing response: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -55,7 +56,7 @@ func (cfg *apiConfig) GetAllChirps(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := json.Marshal(chirps)
+	body, err := json.Marshal(mappers.ChirpsToDTOs(chirps))
 	if err != nil {
 		helpers.WriteErrorMessage(w, "Error marshalling chirps: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -79,7 +80,7 @@ func (cfg *apiConfig) GetChirpById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := json.Marshal(chirp)
+	body, err := json.Marshal(mappers.ChirpToDTO(chirp))
 	if err != nil {
 		helpers.WriteErrorMessage(w, "Error marshalling chirp: "+err.Error(), http.StatusInternalServerError)
 		return
