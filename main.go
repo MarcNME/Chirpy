@@ -52,6 +52,8 @@ func main() {
 	mux.HandleFunc("GET /api/healthz", readinessHandler)
 	// User endpoints
 	mux.HandleFunc("POST /api/users", cfg.userHandler)
+	// login endpoints
+	mux.HandleFunc("POST /api/login", cfg.loginHandler)
 	// Chirp endpoints
 	mux.HandleFunc("POST /api/chirps", cfg.NewChirpHandler)
 	mux.HandleFunc("GET /api/chirps", cfg.GetAllChirps)
