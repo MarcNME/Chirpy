@@ -17,7 +17,7 @@ VALUES (gen_random_uuid(), NOW(), NOW(), $1, $2)
 RETURNING id, created_at, updated_at, body, user_id
 `
 
-func (q *Queries) CreateChirp(ctx context.Context, body string, userID uuid.NullUUID) (Chirp, error) {
+func (q *Queries) CreateChirp(ctx context.Context, body string, userID uuid.UUID) (Chirp, error) {
 	row := q.db.QueryRowContext(ctx, createChirp, body, userID)
 	var i Chirp
 	err := row.Scan(

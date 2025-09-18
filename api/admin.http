@@ -1,5 +1,5 @@
 ### Reset all data (only on dev)
-POST http://localhost:8080/admin/reset
+POST {{host}}/admin/reset
 
 ### Get usage count
-GET http://localhost:8080/admin/metrics
+GET {{host}}/admin/metrics

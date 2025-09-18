@@ -7,6 +7,7 @@ import (
 
 	"github.com/MarcNME/Chirpy/constants"
 	"github.com/MarcNME/Chirpy/helpers"
+	"github.com/MarcNME/Chirpy/internal/auth"
 	"github.com/MarcNME/Chirpy/internal/mappers"
 	"github.com/google/uuid"
 )
@@ -14,20 +15,32 @@ import (
 var profanityWords = [...]string{"kerfuffle", "sharbert", "fornax"}
 
 func (cfg *apiConfig) NewChirpHandler(w http.ResponseWriter, r *http.Request) {
+	jwtToken, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		helpers.WriteErrorMessage(w, "Missing or invalid Authorization header: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	userId, err := auth.ValidateJWT(jwtToken, cfg.jwtSecret)
+	if err != nil {
+		helpers.WriteErrorMessage(w, "Invalid token: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
+
 	decoder := json.NewDecoder(r.Body)
-	validationRequest := validationRequest{}
-	err := decoder.Decode(&validationRequest)
+	chirpRequest := newChirpRequest{}
+	err = decoder.Decode(&chirpRequest)
 	if err != nil {
 		helpers.WriteErrorMessage(w, "Could not decode body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
-	if len(validationRequest.Body) > 140 {
+	if len(chirpRequest.Body) > 140 {
 		helpers.WriteErrorMessage(w, "Chirp is to long", http.StatusBadRequest)
 		return
 	}
 
-	msg := helpers.ReplaceAllIgnoreCase(validationRequest.Body, profanityWords[:])
-	chirp, err := cfg.db.CreateChirp(r.Context(), msg, validationRequest.UserID)
+	msg := helpers.ReplaceAllIgnoreCase(chirpRequest.Body, profanityWords[:])
+	chirp, err := cfg.db.CreateChirp(r.Context(), msg, userId)
 	if err != nil {
 		helpers.WriteErrorMessage(w, "Error creating chirp: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -50,6 +63,18 @@ func (cfg *apiConfig) NewChirpHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) GetAllChirps(w http.ResponseWriter, r *http.Request) {
+	jwtToken, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		helpers.WriteErrorMessage(w, "Missing or invalid Authorization header: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	_, err = auth.ValidateJWT(jwtToken, cfg.jwtSecret)
+	if err != nil {
+		helpers.WriteErrorMessage(w, "Invalid token: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
+
 	chirps, err := cfg.db.GetAllChirps(r.Context())
 	if err != nil {
 		helpers.WriteErrorMessage(w, "Error getting chirps: "+err.Error(), http.StatusInternalServerError)
@@ -73,6 +98,18 @@ func (cfg *apiConfig) GetAllChirps(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *apiConfig) GetChirpById(w http.ResponseWriter, r *http.Request) {
+	jwtToken, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		helpers.WriteErrorMessage(w, "Missing or invalid Authorization header: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	_, err = auth.ValidateJWT(jwtToken, cfg.jwtSecret)
+	if err != nil {
+		helpers.WriteErrorMessage(w, "Invalid token: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
+
 	chirpId := r.PathValue("id")
 	chirp, err := cfg.db.GetChirpByID(r.Context(), uuid.MustParse(chirpId))
 	if err != nil {
@@ -96,7 +133,6 @@ func (cfg *apiConfig) GetChirpById(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type validationRequest struct {
-	Body   string        `json:"body"`
-	UserID uuid.NullUUID `json:"user_id"`
+type newChirpRequest struct {
+	Body string `json:"body"`
 }

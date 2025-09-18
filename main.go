@@ -20,30 +20,7 @@ func Log(handler http.Handler) http.Handler {
 }
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		return
-	}
-	var port = os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	dbURL := os.Getenv("DB_URL")
-	if dbURL == "" {
-		log.Fatal("DB_URL must be set")
-	}
-	db, err := sql.Open("postgres", dbURL)
-	if err != nil {
-		log.Fatalf("Error opening database: %q", err)
-	}
-	dbQueries := database.New(db)
-
-	cfg := &apiConfig{
-		fileserverHits: atomic.Int32{},
-		db:             dbQueries,
-		platform:       os.Getenv("PLATFORM"),
-	}
+	cfg := getApiConfig()
 
 	mux := http.NewServeMux()
 	mux.Handle("/app/", http.StripPrefix("/app", cfg.middlewareMetricsInc(FileHandler())))
@@ -60,7 +37,7 @@ func main() {
 	mux.HandleFunc("GET /api/chirps/{id}", cfg.GetChirpById)
 
 	srv := &http.Server{
-		Addr:    ":" + port,
+		Addr:    cfg.address + ":" + cfg.port,
 		Handler: Log(mux),
 		HTTP2:   &http.HTTP2Config{},
 	}
@@ -69,8 +46,54 @@ func main() {
 	log.Fatal(srv.ListenAndServe())
 }
 
+func getApiConfig() *apiConfig {
+	err := godotenv.Load()
+	if err != nil {
+		log.Printf("Error loading .env file: %v", err)
+		log.Println("Only using environment variables")
+	}
+
+	addr := os.Getenv("ADDRESS")
+	if addr == "" {
+		addr = "127.0.0.1"
+	}
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL must be set")
+	}
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatalf("Error opening database: %q", err)
+	}
+	dbQueries := database.New(db)
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET must be set")
+	}
+
+	cfg := &apiConfig{
+		fileserverHits: atomic.Int32{},
+		db:             dbQueries,
+		address:        addr,
+		port:           port,
+		platform:       os.Getenv("PLATFORM"),
+		jwtSecret:      jwtSecret,
+	}
+
+	return cfg
+}
+
 type apiConfig struct {
 	fileserverHits atomic.Int32
+	address        string
+	port           string
 	db             *database.Queries
 	platform       string
+	jwtSecret      string
 }

@@ -1,0 +1,12 @@
+### GET request to example server
+POST {{host}}/api/login
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "expires_in_seconds": 3600
+}
+
+> {% client.global.set("auth_token", response.body.token); %}
+
+###

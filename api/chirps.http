@@ -1,16 +1,21 @@
 ### Create a new user
-POST http://localhost:8080/api/chirps
+POST {{host}}/api/chirps
 Accept: application/json
 Content-Type: application/json
+Authorization: Bearer {{auth_token}}
 
 {
-  "body": "This is my first chirp!",
-  "user_id": "4f630f05-2e25-4df4-9ea6-d195c8b4a5ca"
+  "body": "This is my first chirp!"
 }
 
+> {% client.global.set("chirp_id", response.body.id); %}
+
 ### Get all chirps
-GET http://localhost:8080/api/chirps
+GET {{host}}/api/chirps
 Accept: application/json
+Authorization: Bearer {{auth_token}}
 
 ### Get chirp by id
-GET http://localhost:8080/api/chirps/31067be5-f203-4603-8c85-9a79ba3fb0ae
+GET {{host}}/api/chirps/{{chirp_id}}
+Accept: application/json
+Authorization: Bearer {{auth_token}}
