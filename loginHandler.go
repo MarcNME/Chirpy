@@ -27,12 +27,6 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.ExpiresInSeconds <= 0 || req.ExpiresInSeconds > 3600 {
-		req.ExpiresInSeconds = 3600 // Default to 1 hour
-	}
-
-	duration := time.Duration(req.ExpiresInSeconds) * time.Second
-
 	user, err := cfg.db.GetUserByEmail(r.Context(), req.Email)
 	if err != nil {
 		log.Printf("Error getting user by email: %v", err)
@@ -45,15 +39,23 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, duration)
+	token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, 1*time.Hour)
 	if err != nil {
 		helpers.WriteErrorMessage(w, "Error generating token", http.StatusInternalServerError)
 		return
 	}
 
+	refreshTokenStr, err := auth.MakeRefreshToken()
+	refreshToken, err := cfg.db.NewRefreshToken(r.Context(), refreshTokenStr, user.ID, time.Now().UTC().Add(60*24*time.Hour))
+	if err != nil {
+		helpers.WriteErrorMessage(w, "Could not create refresh token", http.StatusInternalServerError)
+		return
+	}
+
 	response := loginResponse{
-		UserDTO: mappers.UserToDTO(user),
-		Token:   token,
+		UserDTO:      mappers.UserToDTO(user),
+		Token:        token,
+		RefreshToken: refreshToken.Token,
 	}
 
 	userDTOJson, err := json.Marshal(response)
@@ -70,12 +72,12 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type loginRequest struct {
-	Email            string `json:"email"`
-	Password         string `json:"password"`
-	ExpiresInSeconds int64  `json:"expires_in_seconds,omitempty"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type loginResponse struct {
 	models.UserDTO
-	Token string `json:"token"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
 }
