@@ -29,6 +29,7 @@ func main() {
 	mux.HandleFunc("GET /api/healthz", readinessHandler)
 	// User endpoints
 	mux.HandleFunc("POST /api/users", cfg.userHandler)
+	mux.HandleFunc("PUT /api/users", cfg.updateUserMailAndPasswordHandler)
 	// login endpoints
 	mux.HandleFunc("POST /api/login", cfg.loginHandler)
 	mux.HandleFunc("POST /api/refresh", cfg.refreshAuthTokenHandler)

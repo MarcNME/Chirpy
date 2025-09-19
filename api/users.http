@@ -8,4 +8,13 @@ Content-Type: application/json
   "password": "{{password}}"
 }
 
-###
+### Update user email and password
+PUT {{host}}/api/users
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "email": "{{new_email}}",
+  "password": "{{new_password}}"
+}
