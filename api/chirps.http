@@ -19,3 +19,7 @@ Authorization: Bearer {{auth_token}}
 GET {{host}}/api/chirps/{{chirp_id}}
 Accept: application/json
 Authorization: Bearer {{auth_token}}
+
+### Delete chirp by id
+DELETE {{host}}/api/chirps/{{chirp_id}}
+Authorization: Bearer {{auth_token}}

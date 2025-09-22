@@ -8,6 +8,7 @@ import (
 )
 
 func WriteErrorMessage(w http.ResponseWriter, msg string, errorCode int) {
+	log.Printf("%s: %d", msg, errorCode)
 	w.Header().Set(constants.ContentType, constants.ApplicationJson)
 	w.WriteHeader(errorCode)
 	_, err := w.Write([]byte(`{"error": "` + msg + `"}`))
