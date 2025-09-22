@@ -7,9 +7,10 @@ import (
 
 func UserToDTO(u database.User) models.UserDTO {
 	return models.UserDTO{
-		ID:        u.ID,
-		Email:     u.Email,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
+		ID:          u.ID,
+		Email:       u.Email,
+		CreatedAt:   u.CreatedAt,
+		UpdatedAt:   u.UpdatedAt,
+		IsChirpyRed: u.IsChirpyRed,
 	}
 }

@@ -39,6 +39,8 @@ func main() {
 	mux.HandleFunc("GET /api/chirps", cfg.GetAllChirps)
 	mux.HandleFunc("GET /api/chirps/{id}", cfg.GetChirpById)
 	mux.HandleFunc("DELETE /api/chirps/{id}", cfg.DeleteChirpById)
+	//Webhooks
+	mux.HandleFunc("POST /api/polka/webhooks", cfg.UpgradeUserToChirpyRed)
 
 	srv := &http.Server{
 		Addr:    cfg.address + ":" + cfg.port,
