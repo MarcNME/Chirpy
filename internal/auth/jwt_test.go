@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-var id, _ = uuid.Parse("47734160-3C16-4E82-AA42-7EEC620B2802")
+var id = uuid.MustParse("47734160-3C16-4E82-AA42-7EEC620B2802")
 var signature = "DA3B2880-1519-45C9-81BB-ABCA879DEC65"
 
 func TestMakeJWT(t *testing.T) {
