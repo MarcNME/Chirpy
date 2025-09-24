@@ -13,7 +13,7 @@ func TestGetBearerToken(t *testing.T) {
 		err      error
 	}{
 		{
-			headers:  http.Header{"Authorization": {"mytoken", "othertoken"}},
+			headers:  http.Header{"Authorization": {"Bearer mytoken", "othertoken"}},
 			expected: "mytoken",
 			err:      nil,
 		},
@@ -25,7 +25,7 @@ func TestGetBearerToken(t *testing.T) {
 		{
 			headers:  http.Header{"Authorization": {"mytoken"}},
 			expected: "mytoken",
-			err:      nil,
+			err:      fmt.Errorf("invalid authorization header"),
 		},
 		{
 			headers:  http.Header{},

@@ -83,6 +83,11 @@ func getApiConfig() *apiConfig {
 		log.Fatal("JWT_SECRET must be set")
 	}
 
+	polkaKey := os.Getenv("POLKA_KEY")
+	if polkaKey == "" {
+		log.Fatal("POLKA_KEY must be set")
+	}
+
 	cfg := &apiConfig{
 		fileserverHits: atomic.Int32{},
 		db:             dbQueries,
@@ -90,6 +95,7 @@ func getApiConfig() *apiConfig {
 		port:           port,
 		platform:       os.Getenv("PLATFORM"),
 		jwtSecret:      jwtSecret,
+		polkaApiKey:    polkaKey,
 	}
 
 	return cfg
@@ -102,4 +108,5 @@ type apiConfig struct {
 	db             *database.Queries
 	platform       string
 	jwtSecret      string
+	polkaApiKey    string
 }
