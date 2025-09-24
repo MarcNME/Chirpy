@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"slices"
+	"strings"
 
 	"github.com/MarcNME/Chirpy/constants"
 	"github.com/MarcNME/Chirpy/helpers"
@@ -88,6 +90,15 @@ func (cfg *apiConfig) GetAllChirps(w http.ResponseWriter, r *http.Request) {
 			helpers.WriteErrorMessage(w, ErrorGettingChrips+err.Error(), http.StatusInternalServerError)
 			return
 		}
+	}
+
+	sorting := r.URL.Query().Get("sort")
+	slices.SortFunc(chirps, func(a, b database.Chirp) int {
+		return a.UpdatedAt.Compare(b.UpdatedAt)
+	})
+
+	if strings.ToLower(sorting) == "desc" {
+		slices.Reverse(chirps)
 	}
 
 	body, err := json.Marshal(mappers.ChirpsToDTOs(chirps))
